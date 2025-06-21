@@ -1,0 +1,222 @@
+import Stripe from "stripe";
+import { findCart } from "../models/cart/cart.model.js";
+import { createOrderDB, getOrderDB } from "../models/orders/order.model.js";
+import { findUserById } from "../models/users/user.model.js";
+import { createOrderEmail } from "../services/email.service.js";
+import { getSingleProduct, updateProductDB } from "../models/products/product.model.js";
+import ProductSchema from "../models/products/product.schema.js";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+export const makePayment = async (req, res, next) => {
+  try {
+    // const origin = req.headers.origin;
+    const user = req.userData;
+    const cart = await findCart(user._id);
+
+    if (!cart || cart.cartItems.length === 0) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Cart is empty" });
+      s;
+    }
+    // console.log(cart, "cart")
+    // Prepare line items for Stripe
+    const line_items = cart.cartItems.map((item) => ({
+      price_data: {
+        currency: "aud", // or your preferred currency
+        product_data: {
+          name: item.name,
+          images: item.images,
+          metadata: {
+            productId: String(item._id)
+          }
+        },
+        unit_amount: item.price * 100, // Stripe expects amount in cents
+      },
+      quantity: item.quantity,
+    }));
+
+    // Creates the checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items,
+      customer_email: user.email,
+      mode: "payment",
+      success_url:
+        "http://localhost:5173/payment-result?success=true&session_id={CHECKOUT_SESSION_ID}",
+      cancel_url:
+        "http://localhost:5173/payment-result?success=false&session_id={CHECKOUT_SESSION_ID}",
+
+      //   success_url: `${origin}?success=true`, for production
+      //   cancel_url: `${origin}?canceled=true`,
+    });
+
+    // Send the session URL
+    return res.status(200).json({
+      status: "success",
+      message: "Checkout session created successfully",
+      url: session.url,
+      cart: cart,
+    });
+  } catch (error) {
+    console.error("Error creating checkout session:", error);
+    next({
+      statusCode: 500,
+      message: "payment failed",
+      errorMessage: error?.message,
+    });
+  }
+};
+
+
+export const verifyPaymentSession = async (req, res) => {
+  const { session_id } = req.query;
+  if (!session_id) {
+    return res.status(400).json({
+      verified: false,
+      error: "No session_id",
+    });
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+
+    if (session.payment_status !== "paid") {
+      return res.status(400).json({
+        verified: false,
+        error: "Payment not completed",
+      });
+    }
+
+    const cart = await stripe.checkout.sessions.listLineItems(session_id);
+    if (!cart || cart.data.length === 0) {
+      return res.status(400).json({
+        verified: false,
+        error: "No cart items found in Stripe session.",
+      });
+    }
+
+    const paymentIntent = session.payment_intent
+    if (!paymentIntent) {
+      return res.status(400).json({
+        verified: false,
+        error: "Missing paymentIntent. Payment failed or incomplete.",
+      });
+    }
+
+    const detailedLineItems = await Promise.all(
+      cart.data.map(async item => {
+        const price = await stripe.prices.retrieve(item.price.id);
+        const product = await stripe.products.retrieve(price.product);
+
+        return {
+          _id: product.metadata.productId,
+          quantity: item.quantity,
+          amount_total: item.amount_total,
+          currency: item.currency,
+          price: price.unit_amount,
+          name: product.name,
+          productDescription: product.description,
+          productImages: product.images,
+          productMetadata: product.metadata,
+        };
+      })
+    );
+
+    if (!detailedLineItems.length) {
+      return res.status(400).json({
+        verified: false,
+        error: "No products found in Stripe line items. Cannot proceed with order.",
+      });
+    }
+
+    const { shippingAddress, userId } = req.body
+
+    // Stock update block: fail early and refund if stock issue
+    for (let i of detailedLineItems) {
+      const product = await getSingleProduct(i._id)
+
+      if (!product) {
+        return res.status(400).json({ status: "error", message: `Product not found in DB.` });
+      }
+
+      const updateProduct = await ProductSchema.findOneAndUpdate(
+        { _id: product._id, stock: { $gte: i.quantity } },
+        { $inc: { stock: -i.quantity } },
+        { new: true }
+      )
+
+      if (!updateProduct) {
+        // Safe refund in case of insufficient stock
+        try {
+          const refund = await stripe.refunds.create({ payment_intent: paymentIntent });
+          return res.status(400).json({
+            status: "error",
+            message: `${product.name} is out of stock. Payment refunded.`,
+            refund,
+          });
+        } catch (refundError) {
+          return res.status(500).json({
+            status: "error",
+            message: `Refund failed for ${product.name}. Please contact support.`,
+            error: refundError.message,
+          });
+        }
+      }
+
+      if (updateProduct.stock <= 0) {
+        await updateProductDB(updateProduct._id, { status: "inactive" })
+      }
+    }
+
+    // Avoid duplicate order creation
+    const existingOrder = await getOrderDB({ paymentIntent })
+
+    if (existingOrder.length > 0) {
+      return res.json({
+        verified: session.payment_status === "paid",
+        status: session.payment_status,
+        session,
+        order: existingOrder[0],
+      });
+    }
+
+    const order = await createOrderDB({
+      paymentIntent,
+      products: detailedLineItems,
+      shippingAddress,
+      userId,
+      status: "pending",
+      totalAmount: detailedLineItems.reduce(
+        (sum, item) => sum + item.amount_total,
+        0
+      )
+    })
+
+    //  Email Confirmation
+
+    //  also we are missing the invoice to send to the email to the user
+
+    const user = await findUserById(userId)
+
+    await createOrderEmail({
+      userName: `${user.fName} ${user.lName}`,
+      email: user.email,
+      order,
+    });
+
+    return res.json({
+      verified: true,
+      status: session.payment_status,
+      session,
+      order,
+    });
+
+  } catch (err) {
+    res.status(400).json({
+      verified: false,
+      error: err.message,
+    });
+  }
+};
