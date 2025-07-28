@@ -9,7 +9,7 @@ export const getOrderDB = (filter) => {
 };
 
 export const getAllOrderDB = () => {
-    return OrderSchema.find();
+    return OrderSchema.find({});
 };
 
 export const getOrdersForTimeFrame = (startTime, endTime) => {
@@ -17,7 +17,6 @@ export const getOrdersForTimeFrame = (startTime, endTime) => {
 };
 
 export const updateOrderDB = (_id, updateObj) => {
-    // console.log(updateObj, 999)
     return OrderSchema.findByIdAndUpdate(_id, { $set: updateObj }, {
         new: true,
         runValidators: true,

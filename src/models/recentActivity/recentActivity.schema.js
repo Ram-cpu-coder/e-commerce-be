@@ -46,7 +46,7 @@ recentActivitySchema.pre("save", function (next) {
             productDeleted: `${userDetail.userName} deleted a product (${entityId}).`,
             productUpdated: `${userDetail.userName} updated a product (${entityId}).`,
             productReviewed: `User ${userDetail.userName} reviewed a product (${entityId}).`,
-            bannerCreated: `${userDetail.userName} created a new banner (${entityId}).`,
+            bannerCreated: `${userDetail.userName} created a banner (${entityId}).`,
             bannerDeleted: `${userDetail.userName} deleted a banner (${entityId}).`,
             bannerUpdated: `${userDetail.userName} updated a banner (${entityId}).`,
             categoryCreated: `${userDetail.userName} created a category (${entityId}).`,

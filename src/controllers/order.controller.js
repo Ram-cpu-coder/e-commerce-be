@@ -1,10 +1,8 @@
 import {
-    createOrderDB,
     deleteOrderDB,
     deleteOrderItemDB,
     getAllOrderDB,
     getOneOrderDB,
-    getOrderDB,
     getOrdersForTimeFrame,
     getSalesTimeFrameApi,
     updateOrderDB,
@@ -47,6 +45,21 @@ export const getAllOrders = async (req, res, next) => {
         });
     }
 };
+export const getAllOrdersNoPagination = async (req, res, next) => {
+    try {
+        const orders = await getAllOrderDB()
+        res.status(200).json({
+            status: "success",
+            message: "All orders are here!",
+            orders,
+        });
+    } catch (error) {
+        next({
+            message: "Error while listing  All orders",
+            errorMessage: error.message,
+        });
+    }
+};
 // with out pagination and collecting orders acc to the time Frame
 export const getAllOrdersTimeFrame = async (req, res, next) => {
     try {
@@ -71,8 +84,10 @@ export const updateOrder = async (req, res, next) => {
     try {
         const data = req.body;
         const { _id, status } = data;
+        console.log(status, "status")
         const order = await getOneOrderDB(_id);
-        const user = await findUserById(order.userId)
+        const user = await findUserById(order?.userId)
+        user.password = ""
         if (!order) {
             return next({
                 statusCode: 404,
@@ -86,14 +101,13 @@ export const updateOrder = async (req, res, next) => {
         const obj = {
             userName: user.fName + " " + user.lName,
             email: user.email,
-            order
+            order: orderUpdated
         }
-        if (status === "shipped") {
+
+        if (status !== "pending") {
             await shipOrderEmail(obj)
-        } else if (status === "delivered") {
-            await deliveredOrderEmail(obj)
         }
-        // userName, email, order
+
         res.status(200).json({
             status: "success",
             message: "Order updated!",

@@ -106,27 +106,141 @@ export const orderCreated = ({ userName, email, order, attachments = [] }) => {
   };
 };
 
-export const orderShipped = ({ userName, email, order }) => {
+// export const orderShipped = ({ userName, email, order }) => {
+//   return {
+//     from: `${process.env.COMPANY_NAME} <${process.env.SMTP_EMAIL}>`,
+//     to: email,
+//     subject: `Your Order Has ${order.status.toUpperCase()} – Order #${order._id}`,
+//     html: `
+//       <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif;">
+//         <h1 style="text-align: center;">Hi ${userName},</h1>
+//         <p>Your order <strong>#${order._id}</strong> has been ${order.status.toUpperCase()}!</p>
+
+//         <h3>Order Summary</h3>
+//         <ul>
+//           <li><strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</li>
+//           <li><strong>Estimated Delivery Date:</strong> ${order?.expectedDeliveryDate ? new Date(order.expectedDeliveryDate).toISOString().split("T")[0]
+//         : 'Check tracking link'}</li>
+//          <li>
+//          <strong>Total:</strong> $${(order.totalAmount / 100).toFixed(2)}
+//          </li>
+//         </ul>
+
+//         <table style="width: 100%; border-collapse: collapse;">
+//           <thead>
+//             <tr style="background-color: #f2f2f2;">
+//               <th style="text-align: left; padding: 8px;">Image</th>
+//               <th style="text-align: left; padding: 8px;">Product</th>
+//               <th style="text-align: center; padding: 8px;">Qty</th>
+//               <th style="text-align: right; padding: 8px;">Price</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             ${order.products
+//         .map(
+//           (item) => `
+//                 <tr style="border-bottom: 1px solid #ddd;">
+//                   <td style="padding: 8px;">
+//                     <img src="${item.images[0]}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
+//                   </td>
+//                   <td style="padding: 8px;">${item.name}</td>
+//                   <td style="padding: 8px; text-align: center;">${item.quantity}</td>
+//                   <td style="padding: 8px; text-align: right;">$${(item.totalAmount / 100).toFixed(2)}</td>
+//                 </tr>`
+//         )
+//         .join("")}
+//           </tbody>
+//         </table>
+
+//         ${order.trackingLink
+//         ? `<p style="margin-top: 16px;">Track your shipment: 
+//               <a href="${order.trackingLink}" style="color: blue;">Click here</a>
+//             </p>`
+//         : ''
+//       }
+
+//         <p style="margin-top: 20px;">If you have any questions, reach out to us at <a href="mailto:${process.env.SMTP_EMAIL}">${process.env.SMTP_EMAIL}</a>.</p>
+//         <p>Thanks again for shopping with ${process.env.COMPANY_NAME}!</p>
+//         <p><strong>${process.env.COMPANY_NAME}</strong></p>
+//       </div>
+//   `,
+//   };
+// };
+
+// export const orderDelivered = ({ userName, email, order }) => {
+//   return {
+//     from: `${process.env.COMPANY_NAME} <${process.env.SMTP_EMAIL}>`,
+//     to: email,
+//     subject: `Your Order Has Been Delivered – Order #${order._id}`,
+//     html: `
+//   <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif;">
+//     <h1 style="text-align: center;">Hi ${userName},</h1>
+//     <p>Your order <strong>#${order._id}</strong> has been successfully delivered!</p>
+
+//     <h3>Delivery Summary</h3>
+//     <ul>
+//       <li><strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</li>
+//       <li><strong>Delivered On:</strong> ${order?.updatedAt ? new Date(order.updatedAt).toLocaleDateString() : 'Recently'}</li>
+//       <li><strong>Total:</strong> $${(order.totalAmount / 100).toFixed(2)}</li>
+//     </ul>
+
+//     <h3>Items Delivered:</h3>
+//     <table style="width: 100%; border-collapse: collapse;">
+//       <thead>
+//         <tr style="background-color: #f2f2f2;">
+//           <th style="text-align: left; padding: 8px;">Image</th>
+//           <th style="text-align: left; padding: 8px;">Product</th>
+//           <th style="text-align: center; padding: 8px;">Qty</th>
+//           <th style="text-align: right; padding: 8px;">Price</th>
+//         </tr>
+//       </thead>
+//       <tbody>
+//         ${order.products
+//         .map(
+//           (item) => `
+//                 <tr style="border-bottom: 1px solid #ddd;">
+//                   <td style="padding: 8px;">
+//                     <img src="${item.images[0]}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
+//                   </td>
+//                   <td style="padding: 8px;">${item.name}</td>
+//                   <td style="padding: 8px; text-align: center;">${item.quantity}</td>
+//                   <td style="padding: 8px; text-align: right;">$${(item.totalAmount / 100).toFixed(2)}</td>
+//                 </tr>`
+//         )
+//         .join("")}
+//       </tbody>
+//     </table>
+
+//     <p style="margin-top: 20px;">We hope you're enjoying your purchase! If you have any issues or feedback, please don't hesitate to reach out.</p>
+
+//     <p>Contact us at <a href="mailto:${process.env.SMTP_EMAIL}">${process.env.SMTP_EMAIL}</a>.</p>
+//     <p>Thanks again for choosing ${process.env.COMPANY_NAME}!</p>
+//     <p><strong>${process.env.COMPANY_NAME}</strong></p>
+//   </div>
+//   `,
+//   };
+// };
+
+export const orderUpdate = ({ userName, email, order }) => {
   return {
     from: `${process.env.COMPANY_NAME} <${process.env.SMTP_EMAIL}>`,
     to: email,
-    subject: `Your Order Has Shipped – Order #${order._id}`,
+    subject: `Your Order is ${order.status.toUpperCase()} – Order #${order._id}`,
     html: `
       <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif;">
         <h1 style="text-align: center;">Hi ${userName},</h1>
-        <p>Your order <strong>#${order._id}</strong> has been shipped!</p>
+        <p>Your order <strong>#${order._id}</strong> is ${order.status.toUpperCase()}!</p>
 
-        <h3>Shipping Summary</h3>
+        <h3>Order Summary</h3>
         <ul>
           <li><strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</li>
           <li><strong>Estimated Delivery Date:</strong> ${order?.expectedDeliveryDate ? new Date(order.expectedDeliveryDate).toISOString().split("T")[0]
         : 'Check tracking link'}</li>
          <li>
-         <strong>Total:</strong> $${(order.totalAmount / 100).toFixed(2)}
+         <strong>Total:</strong> $${(order.totalAmount).toFixed(2)}
          </li>
         </ul>
 
-        <h3>Items Shipped:</h3>
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
             <tr style="background-color: #f2f2f2;">
@@ -142,11 +256,11 @@ export const orderShipped = ({ userName, email, order }) => {
           (item) => `
                 <tr style="border-bottom: 1px solid #ddd;">
                   <td style="padding: 8px;">
-                    <img src="${item.productImages[0]}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
+                    <img src="${item.images[0]}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
                   </td>
                   <td style="padding: 8px;">${item.name}</td>
                   <td style="padding: 8px; text-align: center;">${item.quantity}</td>
-                  <td style="padding: 8px; text-align: right;">$${(item.amount_total / 100).toFixed(2)}</td>
+                  <td style="padding: 8px; text-align: right;">$${(item.totalAmount / 100).toFixed(2)}</td>
                 </tr>`
         )
         .join("")}
@@ -167,58 +281,3 @@ export const orderShipped = ({ userName, email, order }) => {
   `,
   };
 };
-
-export const orderDelivered = ({ userName, email, order }) => {
-  return {
-    from: `${process.env.COMPANY_NAME} <${process.env.SMTP_EMAIL}>`,
-    to: email,
-    subject: `Your Order Has Been Delivered – Order #${order._id}`,
-    html: `
-  <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif;">
-    <h1 style="text-align: center;">Hi ${userName},</h1>
-    <p>Your order <strong>#${order._id}</strong> has been successfully delivered!</p>
-
-    <h3>Delivery Summary</h3>
-    <ul>
-      <li><strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</li>
-      <li><strong>Delivered On:</strong> ${order?.updatedAt ? new Date(order.updatedAt).toLocaleDateString() : 'Recently'}</li>
-      <li><strong>Total:</strong> $${(order.totalAmount / 100).toFixed(2)}</li>
-    </ul>
-
-    <h3>Items Delivered:</h3>
-    <table style="width: 100%; border-collapse: collapse;">
-      <thead>
-        <tr style="background-color: #f2f2f2;">
-          <th style="text-align: left; padding: 8px;">Image</th>
-          <th style="text-align: left; padding: 8px;">Product</th>
-          <th style="text-align: center; padding: 8px;">Qty</th>
-          <th style="text-align: right; padding: 8px;">Price</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${order.products
-        .map(
-          (item) => `
-                <tr style="border-bottom: 1px solid #ddd;">
-                  <td style="padding: 8px;">
-                    <img src="${item.productImages[0]}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
-                  </td>
-                  <td style="padding: 8px;">${item.name}</td>
-                  <td style="padding: 8px; text-align: center;">${item.quantity}</td>
-                  <td style="padding: 8px; text-align: right;">$${(item.amount_total / 100).toFixed(2)}</td>
-                </tr>`
-        )
-        .join("")}
-      </tbody>
-    </table>
-
-    <p style="margin-top: 20px;">We hope you're enjoying your purchase! If you have any issues or feedback, please don't hesitate to reach out.</p>
-
-    <p>Contact us at <a href="mailto:${process.env.SMTP_EMAIL}">${process.env.SMTP_EMAIL}</a>.</p>
-    <p>Thanks again for choosing ${process.env.COMPANY_NAME}!</p>
-    <p><strong>${process.env.COMPANY_NAME}</strong></p>
-  </div>
-  `,
-  };
-};
-
