@@ -1,4 +1,4 @@
-import { orderCreated, orderUpdate, OTPemailTemplate, userActivatedEmailTempalate } from "./email.template.js";
+import { contactForm, orderCreated, orderUpdate, OTPemailTemplate, userActivatedEmailTempalate } from "./email.template.js";
 import { eTransporter } from "./email.transport.js";
 
 export const userActivatedEmail = async (obj) => {
@@ -27,5 +27,10 @@ export const shipOrderEmail = async (obj) => {
 
 export const deliveredOrderEmail = async (obj) => {
     const info = await eTransporter().sendMail(orderUpdate(obj))
+    return info.messageId;
+}
+
+export const contactFormEmail = async (obj) => {
+    const info = await eTransporter().sendMail(contactForm(obj))
     return info.messageId;
 }

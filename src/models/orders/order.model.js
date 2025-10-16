@@ -17,11 +17,23 @@ export const getOrdersForTimeFrame = (startTime, endTime) => {
 };
 
 export const updateOrderDB = (_id, updateObj) => {
-    return OrderSchema.findByIdAndUpdate(_id, { $set: updateObj }, {
+    // Separate the status_history from the rest
+    const { status_history, ...rest } = updateObj;
+
+    // Build the update object
+    const updateQuery = { $set: rest };
+
+    // If status_history exists, push new entries instead of overwriting
+    if (status_history) {
+        updateQuery.$push = { status_history: { $each: Array.isArray(status_history) ? status_history : [status_history] } };
+    }
+
+    return OrderSchema.findByIdAndUpdate(_id, updateQuery, {
         new: true,
         runValidators: true,
     });
 };
+
 
 export const getOneOrderDB = (id) => {
     return OrderSchema.findById(id);

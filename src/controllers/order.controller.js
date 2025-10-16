@@ -10,7 +10,7 @@ import {
 import Order from "../models/orders/order.schema.js";
 
 import { findUserById } from "../models/users/user.model.js";
-import { deliveredOrderEmail, shipOrderEmail } from "../services/email.service.js";
+import { shipOrderEmail } from "../services/email.service.js";
 import { getPaginatedData, getPaginatedDataFilter } from "../utils/Pagination.js";
 
 // with pagination 
@@ -82,12 +82,14 @@ export const getAllOrdersTimeFrame = async (req, res, next) => {
 
 export const updateOrder = async (req, res, next) => {
     try {
-        const data = req.body;
-        const { _id, status } = data;
-        console.log(status, "status")
+        // Dummy courier and tracking number (simulate external API)
+        const courier = "Australian Post";
+        const tracking_number = "AU123456789";
+
+        const { _id, status } = req.body;
+
+        // Fetch the order
         const order = await getOneOrderDB(_id);
-        const user = await findUserById(order?.userId)
-        user.password = ""
         if (!order) {
             return next({
                 statusCode: 404,
@@ -95,27 +97,44 @@ export const updateOrder = async (req, res, next) => {
                 message: "Order not found",
             });
         }
-        const orderUpdated = await updateOrderDB(_id, { status });
 
-        // send the mail for the order status
-        const obj = {
-            userName: user.fName + " " + user.lName,
-            email: user.email,
-            order: orderUpdated
-        }
+        // Fetch the user for sending email
+        const user = await findUserById(order?.userId);
+        user.password = "";
 
+        // Prepare a new status history entry
+        const newStatusEntry = {
+            status,
+            date: new Date(),
+            description: `Order status updated to "${status}"`,
+        };
+
+        // Update order with status, courier, tracking number, and append status_history
+        const orderUpdated = await updateOrderDB(_id, {
+            status,
+            courier,
+            tracking_number,
+            status_history: newStatusEntry,
+        });
+
+        // Send email notification if status is not pending
         if (status !== "pending") {
-            await shipOrderEmail(obj)
+            const emailObj = {
+                userName: user.fName + " " + user.lName,
+                email: user.email,
+                order: orderUpdated,
+            };
+            await shipOrderEmail(emailObj);
         }
 
         res.status(200).json({
             status: "success",
             message: "Order updated!",
             orderUpdated,
-            user
+            user,
         });
     } catch (error) {
-        console.log(error?.message)
+        console.error("Error updating order:", error.message);
         return next({
             message: "Error while updating order!",
             errorMessage: error.message,
