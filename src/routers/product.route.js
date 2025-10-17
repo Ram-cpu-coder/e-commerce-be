@@ -3,6 +3,7 @@ import {
     createProduct,
     deleteProduct,
     getActiveProduct,
+    getAdminProductNoPagination,
     getAllProducts,
     getProductById,
     getPublicProducts,
@@ -26,7 +27,6 @@ router.get("/active", getPublicProducts);
 router.get("/active-products", getActiveProduct)
 
 router.get("/:id", getProductById)
-
 
 // getting all the products --- for admin including inactive products
 router.get("/", authenticate, isAdmin, getAllProducts);
