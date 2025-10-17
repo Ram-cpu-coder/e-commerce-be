@@ -21,6 +21,7 @@ import orderInquiryRouter from "./src/routers/orderInquiry.route.js";
 import { errorHandler } from "./src/middlewares/error.handler.js";
 import { startCronJobs } from "./src/utils/cronsJobs.js";
 
+import { rateLimit } from "express-rate-limit";
 const app = express();
 const PORT = process.env.PORT;
 
@@ -34,7 +35,7 @@ if (process.env.NODE_ENV !== "production") {
 // Run server here
 app.use(express.json());
 
-const allowedOrigins = ["http://localhost:5173", "https://k6hb8b9f-5173.aue.devtunnels.ms/"];
+const allowedOrigins = ["http://localhost:5173", "https://e-commerce-fe-sage.vercel.app"];
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -47,6 +48,19 @@ app.use(
     credentials: "include",
   })
 );
+
+// Global rate limiter: 100 requests per 15 minutes per IP
+// rate limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  limit: 100, 
+  standardHeaders: "draft-8",
+  legacyHeaders: false, 
+  ipv6Subnet: 56
+});
+
+// Apply the rate limiting middleware to all requests.
+app.use(limiter);
 
 // routers
 app.use("/api/v1/auth", authRouter);
