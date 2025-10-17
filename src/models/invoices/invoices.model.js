@@ -1,9 +1,9 @@
 import invoiceModel from "./invoices.schema.js"
 
 export const createInvoice = (invoiceObj) => {
-    return new invoiceModel(invoiceObj).save()
+    return invoicesSchema(invoiceObj).save()
 }
 
 export const getInvoice = (filter) => {
-    return invoiceModel.findOne(filter)
+    return invoicesSchema.findOne(filter)
 }
