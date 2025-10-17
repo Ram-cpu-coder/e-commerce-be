@@ -9,11 +9,6 @@ const OrderSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    paymentIntent: {
-      type: String,
-      required: true,
-      unique: true
-    },
     products: [
       {
         _id: {
@@ -34,17 +29,40 @@ const OrderSchema = new mongoose.Schema(
           type: Number,
           min: 1
         },
-        amount_total: {
+        totalAmount: {
           type: Number,
           min: 1,
         },
-        productImages: [String]
+        images: [String]
 
       },
     ],
     status: {
       type: String,
-      enum: ["pending", "shipped", "delivered"],
+      enum: ["pending", "confirmed", "shipped", "inTransit", "outForDelivery", "delivered"],
+      default: "pending"
+    },
+    status_history: {
+      type: [
+        {
+          status: {
+            type: String,
+            enum: ["pending", "confirmed", "shipped", "inTransit", "outForDelivery", "delivered"],
+            required: true,
+          },
+          date: { type: Date, default: Date.now },
+          description: { type: String, default: "" },
+        }
+      ],
+      default: [],
+    },
+    courier: {
+      type: String,
+      default: null
+    },
+    tracking_number: {
+      type: String,
+      default: null
     },
     totalAmount: {
       type: Number,
@@ -52,6 +70,7 @@ const OrderSchema = new mongoose.Schema(
     },
     shippingAddress: {
       type: String,
+      required: true
     },
     expectedDeliveryDate: {
       type: Date

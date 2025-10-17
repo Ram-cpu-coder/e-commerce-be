@@ -18,6 +18,8 @@ const router = express.Router();
 // creating the product // uploading array of images max 4 // under name form field images 
 router.post("/", upload.array("images", 4), createProductValidator, authenticate, isAdmin, createProduct);
 
+// get All The Admin products
+router.get("/admin", authenticate, isAdmin, getAdminProductNoPagination);
 // getting all active products for the customer
 router.get("/active", getPublicProducts);
 // all the active products

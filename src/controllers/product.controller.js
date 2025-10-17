@@ -33,10 +33,9 @@ export const createProduct = async (req, res, next) => {
     });
   }
 };
-
+// with pagination
 export const getAllProducts = async (req, res, next) => {
   try {
-    // const products = await getAllPoductsDB();
     const products = await getPaginatedData(Product, req)
 
     if (products) {

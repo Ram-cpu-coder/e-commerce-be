@@ -4,6 +4,7 @@ import {
   deleteUserById,
   findUserById,
   getUserByEmail,
+  getUsersForTimeFrame,
   registerUserModel,
   updateUser,
 } from "../models/users/user.model.js";
@@ -239,6 +240,24 @@ export const getUserDetailController = async (req, res, next) => {
   }
 };
 
+// with out pagination and collecting users acc to the time Frame
+export const getAllUsersTimeFrame = async (req, res, next) => {
+  try {
+    const users = await getUsersForTimeFrame(req.query.startTime, req.query.endTime)
+
+    res.status(200).json({
+      status: "success",
+      message: "All users are here!",
+      users,
+    });
+  } catch (error) {
+    next({
+      message: "Error while listing all users",
+      errorMessage: error.message,
+    });
+  }
+};
+
 // renew jwt
 export const renewJwt = async (req, res, next) => {
   try {
@@ -253,7 +272,7 @@ export const renewJwt = async (req, res, next) => {
       accessToken: token,
     });
   } catch (error) {
-    console.log(error.message, "error in renewjwt")
+    console.log(error.message, "error in renew jwt")
     next({
       errorMessage: error.message
     })
@@ -315,10 +334,19 @@ export const resendVerificationMail = async (req, res, next) => {
         message: "No user with such email"
       })
     }
+
+    if (user.verified) {
+      return res.status(200).json({
+        status: "success",
+        message:
+          "Your Account is already Verified!",
+        user,
+      });
+    }
     const authSessionExisting = await findAuthSession({ associate: email })
 
     if (authSessionExisting) {
-      const deletePreviousAuthSession = await findAuthSessionAndDelete({ associate: email })
+      await findAuthSessionAndDelete({ associate: email })
     }
 
     const session = await insertAuthSession({

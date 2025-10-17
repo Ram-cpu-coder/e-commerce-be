@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
 const Invoice = ({ order, customerName, invoiceNumber }) => {
 
     const productRows = order.products.map((product, index) => {
-        const rate = product.amount_total / product.quantity;
+        const rate = product.totalAmount / product.quantity;
 
         return React.createElement(
             View,
