@@ -1,10 +1,8 @@
 import {
-    createOrderDB,
     deleteOrderDB,
     deleteOrderItemDB,
     getAllOrderDB,
     getOneOrderDB,
-    getOrderDB,
     getOrdersForTimeFrame,
     getSalesTimeFrameApi,
     updateOrderDB,
@@ -12,7 +10,7 @@ import {
 import Order from "../models/orders/order.schema.js";
 
 import { findUserById } from "../models/users/user.model.js";
-import { deliveredOrderEmail, shipOrderEmail } from "../services/email.service.js";
+import { shipOrderEmail } from "../services/email.service.js";
 import { getPaginatedData, getPaginatedDataFilter } from "../utils/Pagination.js";
 
 // with pagination 
@@ -47,6 +45,21 @@ export const getAllOrders = async (req, res, next) => {
         });
     }
 };
+export const getAllOrdersNoPagination = async (req, res, next) => {
+    try {
+        const orders = await getAllOrderDB()
+        res.status(200).json({
+            status: "success",
+            message: "All orders are here!",
+            orders,
+        });
+    } catch (error) {
+        next({
+            message: "Error while listing  All orders",
+            errorMessage: error.message,
+        });
+    }
+};
 // with out pagination and collecting orders acc to the time Frame
 export const getAllOrdersTimeFrame = async (req, res, next) => {
     try {
@@ -69,10 +82,14 @@ export const getAllOrdersTimeFrame = async (req, res, next) => {
 
 export const updateOrder = async (req, res, next) => {
     try {
-        const data = req.body;
-        const { _id, status } = data;
+        // Dummy courier and tracking number (simulate external API)
+        const courier = "Australian Post";
+        const tracking_number = "AU123456789";
+
+        const { _id, status } = req.body;
+
+        // Fetch the order
         const order = await getOneOrderDB(_id);
-        const user = await findUserById(order.userId)
         if (!order) {
             return next({
                 statusCode: 404,
@@ -80,28 +97,44 @@ export const updateOrder = async (req, res, next) => {
                 message: "Order not found",
             });
         }
-        const orderUpdated = await updateOrderDB(_id, { status });
 
-        // send the mail for the order status
-        const obj = {
-            userName: user.fName + " " + user.lName,
-            email: user.email,
-            order
+        // Fetch the user for sending email
+        const user = await findUserById(order?.userId);
+        user.password = "";
+
+        // Prepare a new status history entry
+        const newStatusEntry = {
+            status,
+            date: new Date(),
+            description: `Order is "${status}"`,
+        };
+
+        // Update order with status, courier, tracking number, and append status_history
+        const orderUpdated = await updateOrderDB(_id, {
+            status,
+            courier,
+            tracking_number,
+            status_history: newStatusEntry,
+        });
+
+        // Send email notification if status is not pending
+        if (status !== "pending") {
+            const emailObj = {
+                userName: user.fName + " " + user.lName,
+                email: user.email,
+                order: orderUpdated,
+            };
+            await shipOrderEmail(emailObj);
         }
-        if (status === "shipped") {
-            await shipOrderEmail(obj)
-        } else if (status === "delivered") {
-            await deliveredOrderEmail(obj)
-        }
-        // userName, email, order
+
         res.status(200).json({
             status: "success",
             message: "Order updated!",
             orderUpdated,
-            user
+            user,
         });
     } catch (error) {
-        console.log(error?.message)
+        console.error("Error updating order:", error.message);
         return next({
             message: "Error while updating order!",
             errorMessage: error.message,

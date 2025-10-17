@@ -4,6 +4,7 @@ import {
     deleteOrder,
     deleteOrderItem,
     getAllOrders,
+    getAllOrdersNoPagination,
     getAllOrdersTimeFrame,
     getOrder,
     getSalesTimeFrame,
@@ -20,12 +21,14 @@ const router = express.Router();
 router.get("/", authenticate, getOrder);
 // with pagination 
 router.get("/admin", authenticate, isAdmin, getAllOrders);
+// no pagination
+router.get("/all", authenticate, getAllOrdersNoPagination)
 
 router.get("/timeFrame", authenticate, isAdmin, getAllOrdersTimeFrame)
 
 router.get("/report", authenticate, isAdmin, getSalesTimeFrame)
 
-router.put("/", authenticate, isAdmin, updateOrderValidator, updateOrder);
+router.put("/", authenticate, updateOrderValidator, updateOrder);
 
 router.delete("/:id/delete", authenticate, deleteOrder)
 

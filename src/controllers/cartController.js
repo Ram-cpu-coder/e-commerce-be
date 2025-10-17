@@ -82,7 +82,7 @@ export const deleteCartItemController = async (req, res, next) => {
 
         return res.status(200).json({
             status: "success",
-            message: "Item removed from the cart",
+            message: "Item removed!",
             response
         })
     } catch (error) {

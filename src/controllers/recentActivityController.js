@@ -82,7 +82,8 @@ export const getAllRecentActivityController = async (req, res, next) => {
 export const getUserRecentActivityController = async (req, res, next) => {
     try {
         const { page } = req.query
-        const { v } = req.body
+        const user = req.userData
+        const userId = user._id
 
         const pageNum = parseInt(page, 10);
         const currentPage = (!isNaN(pageNum) && pageNum > 0) ? pageNum : 1;
