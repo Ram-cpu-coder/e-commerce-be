@@ -1,6 +1,7 @@
 import {
   createNewPoductDB,
   deleteProductDB,
+  getActivePoductsDB,
   getAllPoductsDB,
   getSingleProduct,
   updateProductDB,
@@ -188,10 +189,28 @@ export const deleteProduct = async (req, res, next) => {
   }
 };
 
-// get all the products
+// get all the active products
 export const getActiveProduct = async (req, res, next) => {
   try {
-    const products = await getAllPoductsDB()
+    const products = await getActivePoductsDB()
+    return res.json({
+      status: "success",
+      message: "Product fetched successfully",
+      products,
+    });
+  } catch (error) {
+    return next({
+      statusCode: 500,
+      message: "Error while deleting the Product",
+      errorMessage: error.message,
+    });
+  }
+}
+
+// get all the admin products
+export const getAdminProductNoPagination = async (req, res, next) => {
+  try {
+    const products = await getAllPoductsDB();
     return res.json({
       status: "success",
       message: "Product fetched successfully",
