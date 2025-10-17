@@ -36,19 +36,29 @@ if (process.env.NODE_ENV !== "production") {
 app.use(express.json());
 
 const allowedOrigins = ["http://localhost:5173", "https://e-commerce-fe-sage.vercel.app"];
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+      // allow server-to-server requests without origin
+      if (!origin) return callback(null, true);
+
+      // check if origin is allowed
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, origin); // must return origin when using credentials
       }
+
+      // block if not allowed
+      return callback(new Error("Not allowed by CORS"));
     },
-    credentials: "include",
+    credentials: true, // allow cookies
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // allowed HTTP methods
+    allowedHeaders: ["Content-Type", "Authorization"], // allowed headers
   })
 );
 
+// Explicitly handle preflight OPTIONS requests
+app.options("*", cors());
 // Global rate limiter: 100 requests per 15 minutes per IP
 // rate limiter
 const limiter = rateLimit({
