@@ -106,7 +106,7 @@ export const updateOrder = async (req, res, next) => {
         const newStatusEntry = {
             status,
             date: new Date(),
-            description: `Order status updated to "${status}"`,
+            description: `Order is "${status}"`,
         };
 
         // Update order with status, courier, tracking number, and append status_history

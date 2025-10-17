@@ -1,4 +1,4 @@
-import { contactFormEmail } from "../services/email.service.js";
+import { inquiryFormEmail } from "../services/email.service.js";
 
 export const createOrderInquiry = async (req, res, next) => {
     try {
@@ -18,14 +18,6 @@ export const createOrderInquiry = async (req, res, next) => {
                 message: "Please provide a valid email address.",
             });
         }
-
-        if (!orderNumber || orderNumber.trim().length < 4) {
-            return res.status(400).json({
-                status: "error",
-                message: "Please provide a valid order tracking number.",
-            });
-        }
-
         if (!customer_message || customer_message.trim().length < 10) {
             return res.status(400).json({
                 status: "error",
@@ -41,7 +33,7 @@ export const createOrderInquiry = async (req, res, next) => {
             orderNumber,
         };
 
-        const response = await contactFormEmail(inquiryData);
+        const response = await inquiryFormEmail(inquiryData);
 
         if (!response) {
             return res.status(500).json({
@@ -61,3 +53,5 @@ export const createOrderInquiry = async (req, res, next) => {
         });
     }
 };
+
+

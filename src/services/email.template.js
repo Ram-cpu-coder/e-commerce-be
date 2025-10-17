@@ -282,16 +282,18 @@ export const orderUpdate = ({ userName, email, order }) => {
   };
 };
 
-export const contactForm = ({ customer_name, customer_email, customer_message, orderNumber }) => {
+export const inquiryForm = ({ customer_name, customer_email, customer_message, orderNumber }) => {
+  const orderInquirySub = `Order Inquiry - Order #${orderNumber || "N/A"}`
+  const normalInquirySub = `Inquiry`
   return {
     from: `${process.env.COMPANY_NAME} <${process.env.SMTP_EMAIL}>`,
     to: process.env.SMTP_EMAIL,
     replyTo: customer_email,
-    subject: `Order Inquiry - Order #${orderNumber || "N/A"}`,
+    subject: orderNumber ? orderInquirySub : normalInquirySub,
     text: `
-You have received a new order inquiry from the Order Tracking page.
+You have received aninquiry from ${process.env.COMPANY_NAME}'s customer.
 
-📦 Order Number: ${orderNumber || "Not provided"}
+${orderNumber ? `📦 Order Number: ${orderNumber}\n` : ""}
 👤 Customer Name: ${customer_name}
 📧 Customer Email: ${customer_email}
 
@@ -303,8 +305,8 @@ This email was sent from your eCommerce website’s Order Tracking contact form.
 `,
     html: `
     <div style="font-family: Arial, sans-serif; color: #333;">
-      <h2>📦 New Order Inquiry</h2>
-      <p><strong>Order Number:</strong> ${orderNumber || "Not provided"}</p>
+      <h2>Customer Inquiry</h2>
+      ${orderNumber ? `<p><strong>Order Number: </strong> ${orderNumber}</p>` : ""}
       <p><strong>Name:</strong> ${customer_name}</p>
       <p><strong>Email:</strong> ${customer_email}</p>
       <p><strong>Message:</strong></p>
