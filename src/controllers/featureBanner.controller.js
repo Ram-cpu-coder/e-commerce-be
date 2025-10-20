@@ -39,13 +39,6 @@ export const fetchFeatureBannerController = async (req, res, next) => {
     try {
         const featuredBanner = await fetchFeatureBanner()
 
-        if (!featuredBanner) {
-            return next({
-                status: "error",
-                message: "Not Found!"
-            })
-        }
-
         return res.status(200).json({
             status: "success",
             message: "Feature Banner fetched successfully!",

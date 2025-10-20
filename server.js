@@ -74,13 +74,24 @@ app.use(errorHandler);
 const startServer = async () => {
   try {
     await connectDB();
-    startCronJobs()
+    console.log("MongoDB connected");
+
     app.listen(PORT, () => {
-      console.log(`The server is running at http://localhost:${PORT}`);
+      console.log(`Server running at http://localhost:${PORT}`);
     });
+
+    // Start cron jobs asynchronously with delay
+    setTimeout(async () => {
+      try {
+        await startCronJobs();
+        console.log("Cron jobs started");
+      } catch (err) {
+        console.error("Error starting cron jobs", err);
+      }
+    }, 5000);
+
   } catch (error) {
     console.log("SERVER failed to run", error);
   }
 };
-
 startServer();
