@@ -62,7 +62,6 @@ export const getAllProducts = async (req, res, next) => {
 // acc to the pagination
 export const getPublicProducts = async (req, res, next) => {
   try {
-    // const products = await getActivePoductsDB();
     const products = await getPaginatedDataFilter(Product, req, { status: "active" })
 
     if (products) {
@@ -70,11 +69,6 @@ export const getPublicProducts = async (req, res, next) => {
         status: "success",
         message: "All products fetched",
         products,
-      });
-    } else {
-      return res.status(400).json({
-        status: "error",
-        message: "No Products Listed!",
       });
     }
   } catch (error) {
