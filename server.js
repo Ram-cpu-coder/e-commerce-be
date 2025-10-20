@@ -21,6 +21,7 @@ import orderInquiryRouter from "./src/routers/orderInquiry.route.js";
 import { errorHandler } from "./src/middlewares/error.handler.js";
 import { startCronJobs } from "./src/utils/cronsJobs.js";
 
+import { rateLimit } from "express-rate-limit";
 const app = express();
 const PORT = process.env.PORT;
 
@@ -34,19 +35,42 @@ if (process.env.NODE_ENV !== "production") {
 // Run server here
 app.use(express.json());
 
-const allowedOrigins = ["http://localhost:5173", "https://k6hb8b9f-5173.aue.devtunnels.ms/"];
+const allowedOrigins = ["http://localhost:5173", "https://e-commerce-fe-sage.vercel.app"];
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+      // allow server-to-server requests without origin
+      if (!origin) return callback(null, true);
+
+      // check if origin is allowed
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, origin); // must return origin when using credentials
       }
+
+      // block if not allowed
+      return callback(new Error("Not allowed by CORS"));
     },
-    credentials: "include",
+    credentials: true, // allow cookies
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // allowed HTTP methods
+    allowedHeaders: ["Content-Type", "Authorization"], // allowed headers
   })
 );
+
+// Explicitly handle preflight OPTIONS requests
+app.options("*", cors());
+// Global rate limiter: 100 requests per 15 minutes per IP
+// rate limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  limit: 100, 
+  standardHeaders: "draft-8",
+  legacyHeaders: false, 
+  ipv6Subnet: 56
+});
+
+// Apply the rate limiting middleware to all requests.
+app.use(limiter);
 
 // routers
 app.use("/api/v1/auth", authRouter);

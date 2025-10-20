@@ -1,5 +1,5 @@
 
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2"
 
 const OrderSchema = new mongoose.Schema(
@@ -78,14 +78,7 @@ const OrderSchema = new mongoose.Schema(
     invoiceId: {
       type: mongoose.Types.ObjectId,
       ref: "Invoice"
-    },
-    paymentDetails: {
-      id: String,
-      amount: Number,
-      status: String,
-      client_secret: String,
-      payment_method: String,
-    },
+    }
   },
   { timestamps: true }
 );

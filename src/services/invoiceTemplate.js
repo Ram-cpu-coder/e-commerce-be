@@ -33,8 +33,8 @@ const Invoice = ({ order, customerName, invoiceNumber }) => {
             { key: index, style: styles.tableRow },
             React.createElement(Text, { style: { width: "40%" } }, product.name),
             React.createElement(Text, { style: { width: "20%", textAlign: "right" } }, product.quantity),
-            React.createElement(Text, { style: { width: "20%", textAlign: "right" } }, `$${(rate).toFixed(2)}`),
-            React.createElement(Text, { style: { width: "20%", textAlign: "right" } }, `$${(product.totalAmount).toFixed(2)}`)
+            React.createElement(Text, { style: { width: "20%", textAlign: "right" } }, `$${(rate / 100).toFixed(2)}`),
+            React.createElement(Text, { style: { width: "20%", textAlign: "right" } }, `$${(product.amount_total / 100).toFixed(2)}`)
         );
     });
 
